@@ -1,22 +1,25 @@
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
 import com.opencsv.CSVReader;
 import com.opencsv.bean.ColumnPositionMappingStrategy;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class main {
@@ -32,8 +35,53 @@ public class main {
         List<Employee> listXml = parseXML("data.xml");
         String jsonXml = listToJson(list);
         writeString(jsonXml, "new-data2.json");
-        
+
+        //задача 3
+        String jsonRead = readString("new-data2.json");
+        List<Employee> employeeList = jsonToList(jsonRead);
+        for (Employee e : employeeList) {
+            System.out.println(e.toString());
+        }
     }
+
+    private static List<Employee> jsonToList(String jsonRead) {
+        List<Employee> list = new ArrayList<>();
+        try {
+            JSONParser parser = new JSONParser();
+            JSONArray array = (JSONArray) parser.parse(jsonRead);
+            for (int i = 0; i < array.toArray().length; i++) {
+
+                Object obj = array.get(i);
+                JSONObject jsonObject = (JSONObject) obj;
+                long id = (long) jsonObject.get("id");
+                String firstName = (String) jsonObject.get("firstName");
+                String lastName = (String) jsonObject.get("lastName");
+                String country = (String) jsonObject.get("country");
+                int age = (int) ((long) jsonObject.get("age"));
+                list.add(new Employee(id, firstName, lastName, country, age));
+            }
+        } catch (ParseException parseException) {
+            parseException.printStackTrace();
+        }
+        return list;
+    }
+
+    private static String readString(String fileName) {
+        JSONParser parser = new JSONParser();
+        String line = "";
+        StringBuilder lineJson = new StringBuilder();
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
+
+            while ((line = bufferedReader.readLine()) != null) {
+                lineJson.append(line);
+            }
+            line = lineJson.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return line;
+    }
+
     private static List<Employee> parseXML(String fileName) {
         List<Employee> staff = new ArrayList<>();
         try {
@@ -47,6 +95,7 @@ public class main {
         }
         return staff;
     }
+
     private static List<Employee> read(Node root) {
         List<Employee> list = new ArrayList<>();
         NodeList nodeList = root.getChildNodes();
@@ -85,6 +134,7 @@ public class main {
         }
         return list;
     }
+
     private static List<Employee> parseCSV(String[] columnMapping, String fileName) {
         List<Employee> staff = new ArrayList<>();
         try (CSVReader reader = new CSVReader(new FileReader(fileName))) {
@@ -101,6 +151,7 @@ public class main {
         }
         return staff;
     }
+
     private static String listToJson(List<Employee> list) {
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
@@ -110,6 +161,7 @@ public class main {
         String json = gson.toJson(list, listType);
         return json;
     }
+
     private static void writeString(String json, String fileName) {
         try (FileWriter file = new FileWriter(fileName)) {
             file.write(json);
