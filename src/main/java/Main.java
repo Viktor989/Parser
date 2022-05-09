@@ -22,7 +22,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-public class main {
+public class Main {
     public static void main(String[] args) {
         //задача 1
         String[] columnMapping = {"id", "firstName", "lastName", "country", "age"};
